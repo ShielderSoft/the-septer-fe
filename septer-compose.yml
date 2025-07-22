@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: septer-postgres
+    environment:
+      POSTGRES_DB: septer
+      POSTGRES_USER: septer_user
+      POSTGRES_PASSWORD: septer_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - septer-network
+    restart: unless-stopped
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: DockerfileBackend
+    container_name: septer-backend
+    environment:
+      - DB_URL=postgresql://septer_user:septer_password@postgres:5432/septer
+      - JWT_SECRET=Th353pT3R
+      - GEMINI_API_BASE=https://generativelanguage.googleapis.com
+      - MAX_FILE_SIZE_MB=10
+      - SEPTER_AES_SECRET=Th353pT3R
+      - SEPTER_AES_SALT=746869735f69735f73616c74
+      - SEPTER_AES_IV_BASE=f0c3a9de0d1234f5bb98cc4401a2b37e
+    ports:
+      - "8007:8000"
+    depends_on:
+      - postgres
+    networks:
+      - septer-network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: DockerfileFrontend
+    container_name: septer-frontend
+    ports:
+      - "8006:8006"
+    depends_on:
+      - backend
+    networks:
+      - septer-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  septer-network:
+    driver: bridge

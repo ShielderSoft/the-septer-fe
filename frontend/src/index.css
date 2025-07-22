@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+/* This is the container for the fixed-position blobs */
+.background-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Each blob is now an independent div */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+  /* Use a much larger blur for a softer, more ambient effect */
+  filter: blur(120px); 
+}
+
+/* Light Mode Blobs */
+.blob-1 {
+  width: 450px; height: 450px;
+  background: rgba(59, 130, 246, 0.2); /* light-primary */
+  animation: blob-one 35s infinite alternate;
+}
+.blob-2 {
+  width: 550px; height: 550px;
+  background: rgba(16, 185, 129, 0.15); /* light-accent */
+  animation: blob-two 40s infinite alternate;
+}
+.blob-3 {
+  width: 400px; height: 400px;
+  background: rgba(239, 68, 68, 0.1); /* A subtle red for light mode */
+  animation: blob-three 45s infinite alternate;
+}
+
+/* Dark Mode Blobs */
+.dark .blob-1 {
+  background: rgba(56, 189, 248, 0.25); /* dark-primary */
+  animation: blob-one 25s infinite alternate;
+}
+.dark .blob-2 {
+  background: rgba(244, 113, 181, 0.2); /* dark-accent */
+  animation: blob-two 30s infinite alternate;
+}
+.dark .blob-3 {
+  background: rgba(70, 200, 255, 0.15); /* Another cyan/blue for dark mode */
+  animation: blob-three 35s infinite alternate;
+}
+
+/* More expansive animations that cover the whole screen */
+@keyframes blob-one {
+  from { transform: translate(-80%, -40%) rotate(0deg) scale(0.8); }
+  to { transform: translate(60%, 50%) rotate(180deg) scale(1.2); }
+}
+@keyframes blob-two {
+  from { transform: translate(40%, 30%) scale(1.2) skew(15deg); }
+  to { transform: translate(-60%, -50%) scale(0.8) skew(-5deg); }
+}
+@keyframes blob-three {
+  from { transform: translate(-40%, 50%) rotate(45deg); }
+  to { transform: translate(50%, -60%) rotate(225deg); }
+}
+
+/* Utility for custom scrollbar */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.400') transparent;
+}
+.dark .scrollbar-thin {
+    scrollbar-color: theme('colors.dark-text-secondary') transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 8px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.gray.400');
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.dark-text-secondary');
+}

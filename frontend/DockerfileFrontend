@@ -1,0 +1,30 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Clear npm cache and install dependencies with clean slate
+RUN npm cache clean --force
+RUN rm -rf node_modules package-lock.json
+RUN npm install
+
+# Copy source code (excluding node_modules and dist)
+COPY . .
+RUN rm -rf node_modules/.cache dist
+
+# Reinstall to ensure clean state
+RUN npm ci
+
+# Build the application
+RUN npm run build
+
+# Install serve globally
+RUN npm install -g serve
+
+# Expose port
+EXPOSE 8006
+
+# Serve the built application
+CMD ["serve", "-s", "dist", "-l", "8006"]
