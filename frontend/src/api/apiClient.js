@@ -1,6 +1,4 @@
-const BASE_URL = window.location.hostname === 'moodscape.fun' 
-  ? 'http://moodscape.fun:8007'  
-  : 'http://localhost:8000'; 
+const BASE_URL = 'http://127.0.0.1:8000';
 
 const request = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
@@ -60,7 +58,7 @@ export const login = (credentials) => request('/api/auth/login', {
   body: JSON.stringify(credentials),
 });
 
-export const guardianLogin = (credentials) => request('/api/g-login-rntinfosec', {
+export const guardianLogin = (credentials) => request('/api/g-login/login', {
   method: 'POST',
   body: JSON.stringify(credentials),
 });

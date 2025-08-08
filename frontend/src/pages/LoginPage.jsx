@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Captcha from '../components/captcha/Captcha';
 import { Mail } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../api/apiClient';
@@ -16,23 +17,44 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
 
+  // CAPTCHA state
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaResponse, setCaptchaResponse] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
+  const [captchaRefreshKey, setCaptchaRefreshKey] = useState(0);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setCaptchaError('');
     setLoading(true);
-    
+
+    if (!captchaToken || !captchaResponse) {
+      setCaptchaError('Please complete the CAPTCHA');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLoginView) {
-        await login({ email, password });
+        await login({ email, password, captcha_token: captchaToken, captcha_response: captchaResponse });
       } else {
-        await api.signup({ email, password, role: 'Hunter' });
+        await api.signup({ email, password, role: 'Hunter', captcha_token: captchaToken, captcha_response: captchaResponse });
         setSuccess('Registration successful! Please log in.');
         setIsLoginView(true);
         setPassword('');
       }
+      setCaptchaRefreshKey(k => k + 1); // refresh CAPTCHA on success
+      setCaptchaResponse('');
     } catch (err) {
-      setError(err.message);
+      if (err.message && err.message.toLowerCase().includes('captcha')) {
+        setCaptchaError(err.message);
+        setCaptchaRefreshKey(k => k + 1); // refresh CAPTCHA on failure
+        setCaptchaResponse('');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,6 +81,15 @@ const LoginPage = () => {
           <InputField icon={<Mail size={20} />} type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} required />
           <PasswordField placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
           {!isLoginView && <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary">Password must be 8+ chars with uppercase, lowercase, digit, and special character.</p>}
+          <Captcha
+            key={captchaRefreshKey}
+            onChange={(token, response) => {
+              setCaptchaToken(token);
+              setCaptchaResponse(response);
+              setCaptchaError('');
+            }}
+            error={captchaError}
+          />
           <AppButton type="submit" isLoading={loading}>{isLoginView ? 'Login' : 'Create Account'}</AppButton>
         </form>
 

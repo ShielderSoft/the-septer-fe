@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Captcha from '../components/captcha/Captcha';
 import { Mail, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import InputField from '../components/ui/InputField';
@@ -11,6 +12,12 @@ const GuardianLoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // CAPTCHA state
+    const [captchaToken, setCaptchaToken] = useState('');
+    const [captchaResponse, setCaptchaResponse] = useState('');
+    const [captchaError, setCaptchaError] = useState('');
+    const [captchaRefreshKey, setCaptchaRefreshKey] = useState(0);
 
     useEffect(() => {
         // If user is already logged in with guardian access, redirect to dashboard
@@ -28,14 +35,28 @@ const GuardianLoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setCaptchaError('');
         setLoading(true);
 
+        if (!captchaToken || !captchaResponse) {
+            setCaptchaError('Please complete the CAPTCHA');
+            setLoading(false);
+            return;
+        }
+
         try {
-            await guardianLogin({ email, password });
-            // Don't use window.location.reload() - let React handle the state change
+            await guardianLogin({ email, password, captcha_token: captchaToken, captcha_response: captchaResponse });
             window.history.pushState({}, '', '/g-dashboard');
+            setCaptchaRefreshKey(k => k + 1);
+            setCaptchaResponse('');
         } catch (err) {
-            setError(err.message);
+            if (err.message && err.message.toLowerCase().includes('captcha')) {
+                setCaptchaError(err.message);
+                setCaptchaRefreshKey(k => k + 1);
+                setCaptchaResponse('');
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -65,6 +86,15 @@ const GuardianLoginPage = () => {
                         value={password} 
                         onChange={e => setPassword(e.target.value)} 
                         required 
+                    />
+                    <Captcha
+                        key={captchaRefreshKey}
+                        onChange={(token, response) => {
+                            setCaptchaToken(token);
+                            setCaptchaResponse(response);
+                            setCaptchaError('');
+                        }}
+                        error={captchaError}
                     />
                     <AppButton 
                         type="submit" 
